@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>detect-caps-lock</title>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
+
+<script type="module">
+  // isCapsLockModifier && isCapsLockKey
+  // ^ if modifier is on and this is caps lock key,
+  //   that means caps lock is being deactivated, and next state should be false
+
+  // !isCapsLockModifier && isCapsLockKey
+  // ^ if modifier is off and this is caps lock key,
+  //   that means caps lock is being activated, and next state should be true
+
+  // isCapsLockModifier && !isCapsLockKey
+  // ^ if modifier is on and this is not caps lock key,
+  //   that means caps lock remains on, and next state should be true
+
+  // !isCapsLockModifier && !isCapsLockKey
+  // ^ if modifier is off and this is not caps lock key,
+  //   that means caps lock remains off, and the next state should be false
+  import {render , h} from 'https://cdn.skypack.dev/preact';
+  import { useEffect, useState } from 'https://cdn.skypack.dev/preact/hooks';
+
+  const useCapsLockDetection = () => {
+    const [ capsLockIsOn, setCapsLockIsOn ] = useState(undefined)
+
+    const onKeyDown = e => {
+      const isCapsLockModifier = e.getModifierState("CapsLock")
+      const isCapsLockKey = e.key === "CapsLock"
+      
+      setCapsLockIsOn(isCapsLockModifier !== isCapsLockKey)
+    }
+    
+    useEffect(() => {
+      document.body.addEventListener("keydown", onKeyDown)
+      return () => document.body.removeEventListener("keydown", onKeyDown)
+    }, [onKeyDown])
+    
+    return capsLockIsOn
+  }
+
+  const CapsLockIndicator = () => {
+    const capsLockIsOn = useCapsLockDetection()
+
+    return h(
+      "div",
+      {},
+      "caps lock is ",
+      h(
+        "strong",
+        {},
+        capsLockIsOn ? "ON" : "OFF"
+      )
+    )
+  }
+
+  render(h(CapsLockIndicator), document.getElementById('app'))
+</script>
