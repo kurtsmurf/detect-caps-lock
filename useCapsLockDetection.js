@@ -1,5 +1,5 @@
 import { useState } from "https://cdn.skypack.dev/preact/hooks";
-import { useEventListener } from "./useEventListener";
+import { useEventListener } from "./useEventListener.js";
 
 export const useCapsLockDetection = () => {
   const [capsLockIsOn, setCapsLockIsOn] = useState(false);

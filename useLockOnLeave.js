@@ -1,15 +1,15 @@
 import { useEffect, useState } from "https://cdn.skypack.dev/preact/hooks";
-import { useVisibilityDetection } from "./useVisibilityDetection";
+import { useWindowFocusDetection } from "./useWindowFocusDetection.js";
 
 export const useLockOnLeave = () => {
   const [isLocked, setIsLocked] = useState(false);
-  const isVisible = useVisibilityDetection();
+  const hasFocus = useWindowFocusDetection()
 
   useEffect(() => {
-    if (!isVisible) {
+    if (!hasFocus) {
       setIsLocked(true);
     }
-  }, [isVisible]);
+  }, [hasFocus]);
 
   const unlock = () => setIsLocked(false);
 
