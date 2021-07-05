@@ -1,67 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>detect-caps-lock</title>
-</head>
-<body>
-  <div id="app"></div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>detect-caps-lock</title>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
 </html>
 
 <script type="module">
-  // isCapsLockModifier && isCapsLockKey
-  // ^ if modifier is on and this is caps lock key,
-  //   that means caps lock is being deactivated, and next state should be false
-
-  // !isCapsLockModifier && isCapsLockKey
-  // ^ if modifier is off and this is caps lock key,
-  //   that means caps lock is being activated, and next state should be true
-
-  // isCapsLockModifier && !isCapsLockKey
-  // ^ if modifier is on and this is not caps lock key,
-  //   that means caps lock remains on, and next state should be true
-
-  // !isCapsLockModifier && !isCapsLockKey
-  // ^ if modifier is off and this is not caps lock key,
-  //   that means caps lock remains off, and the next state should be false
-  import {render , h} from 'https://cdn.skypack.dev/preact';
-  import { useEffect, useState } from 'https://cdn.skypack.dev/preact/hooks';
+  import { render, h } from "https://cdn.skypack.dev/preact";
+  import { useEffect, useState } from "https://cdn.skypack.dev/preact/hooks";
 
   const useCapsLockDetection = () => {
-    const [ capsLockIsOn, setCapsLockIsOn ] = useState(undefined)
+    const [capsLockIsOn, setCapsLockIsOn] = useState(false);
 
-    const onKeyDown = e => {
-      const isCapsLockModifier = e.getModifierState("CapsLock")
-      const isCapsLockKey = e.key === "CapsLock"
-      
-      setCapsLockIsOn(isCapsLockModifier !== isCapsLockKey)
-    }
-    
+    const onKeyDown = (e) => {
+      const isCapsLockModifier = e.getModifierState("CapsLock");
+      const isCapsLockKey = e.key === "CapsLock";
+
+      setCapsLockIsOn(isCapsLockModifier !== isCapsLockKey);
+    };
+
     useEffect(() => {
-      document.body.addEventListener("keydown", onKeyDown)
-      return () => document.body.removeEventListener("keydown", onKeyDown)
-    }, [onKeyDown])
-    
-    return capsLockIsOn
-  }
+      document.addEventListener("keydown", onKeyDown);
+      return () => document.removeEventListener("keydown", onKeyDown);
+    }, []);
 
-  const CapsLockIndicator = () => {
-    const capsLockIsOn = useCapsLockDetection()
+    return capsLockIsOn;
+  };
 
+  const useVisibilityDetection = () => {
+    const [isVisible, setIsVisible] = useState(true);
+
+    const onVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+
+    useEffect(() => {
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      return () =>
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+    }, []);
+
+    return isVisible;
+  };
+
+  const useLockOnLeave = () => {
+    const [isLocked, setIsLocked] = useState(false);
+    const isVisible = useVisibilityDetection();
+
+    useEffect(() => {
+      if (!isVisible) {
+        setIsLocked(true)
+      }
+    }, [isVisible]);
+
+    const unlock = () => setIsLocked(false);
+
+    return [isLocked, unlock];
+  };
+
+  const CapsLockIndicator = ({capsLockIsOn}) => {
     return h(
       "div",
       {},
       "caps lock is ",
-      h(
-        "strong",
-        {},
-        capsLockIsOn ? "ON" : "OFF"
-      )
-    )
-  }
+      h("strong", {}, capsLockIsOn ? "ON" : "OFF")
+    );
+  };
 
-  render(h(CapsLockIndicator), document.getElementById('app'))
+  const UnlockPrompt = ({unlock}) => {
+    useEffect(() => {
+      document.addEventListener("keypress", unlock);
+      return () => document.removeEventListener("keypress", unlock);
+    });
+
+    return h("div", {}, "Press any key to continue")
+  };
+
+  const App = () => {
+    const capsLockIsOn = useCapsLockDetection();
+    const [isLocked, unlock] = useLockOnLeave();
+
+    return isLocked
+      ? h(UnlockPrompt, { unlock })
+      : h(CapsLockIndicator, { capsLockIsOn });
+  };
+
+  render(h(App), document.getElementById("app"));
 </script>
