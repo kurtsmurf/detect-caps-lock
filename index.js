@@ -1,6 +1,6 @@
 import { h, render } from "https://cdn.skypack.dev/preact";
 import { useCapsLockDetection } from "./useCapsLockDetection.js";
-import { useEventListener } from "./useEventListener.js";
+import { useWindowEventListener } from "./useEventListener.js";
 import { useLockOnLeave } from "./useLockOnLeave.js";
 
 const CapsLockIndicator = ({ capsLockIsOn }) => {
@@ -13,7 +13,7 @@ const CapsLockIndicator = ({ capsLockIsOn }) => {
 };
 
 const UnlockPrompt = ({ unlock }) => {
-  useEventListener("keypress", unlock)
+  useWindowEventListener("keypress", unlock)
 
   return h("div", {}, "Press any key to continue");
 };
